@@ -32,6 +32,7 @@ import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { character } from './character.ts';
 import yargs from 'yargs';
 import readline from 'readline';
 
@@ -477,8 +478,9 @@ const startAgents = async () => {
 
   let charactersArg = args.characters || args.character;
 
-  let characters = [defaultCharacter];
+  let characters = [character];
   console.log('charactersArg', charactersArg);
+  console.log('characters', characters);
   if (charactersArg) {
     characters = await loadCharacters(charactersArg);
   }
