@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: eliza-api
+    env: docker
+    region: singapore # or other region
+    plan: starter
+    branch: main
+    dockerCommand: pnpm start --non-interactive --character='characters/dotty.character.json'
+    envVars:
+      - key: NODE_ENV
+        value: production

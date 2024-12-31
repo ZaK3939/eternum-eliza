@@ -1,0 +1,9 @@
+services:
+  eliza-api:
+    build:
+      context: .. # 重要: 親ディレクトリをコンテキストとして使用
+      dockerfile: eliza/Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production

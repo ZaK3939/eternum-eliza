@@ -1,0 +1,8 @@
+cat > .dockerignore << 'EOF'
+node_modules
+.env
+.git
+.next
+dist
+build
+EOF

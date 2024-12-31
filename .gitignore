@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+*.log
+data/
+content_cache/
+.DS_Store
+node_modules/
+dist/
+.log
+.env
+content_cache/
