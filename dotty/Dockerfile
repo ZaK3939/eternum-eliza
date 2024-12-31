@@ -23,7 +23,4 @@ WORKDIR /app/dotty
 
 EXPOSE 3000
 
-RUN cd /app/dotty && pnpm build
-
-# CMDを変更
-CMD ["sh", "-c", "cd /app/dotty && PORT=$PORT pnpm start --non-interactive --character='dist/characters/dotty.character.js'"]
+CMD ["pnpm", "start", "--non-interactive", "--character=dist/characters/dotty.character.js"]
