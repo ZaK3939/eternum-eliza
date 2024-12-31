@@ -23,4 +23,4 @@ WORKDIR /app/dotty
 
 EXPOSE 3000
 
-CMD ["pnpm", "start", "--non-interactive", "--character=src/character.ts"]
+CMD ["pnpm", "start", "--non-interactive"]
