@@ -3,7 +3,8 @@ import { Character, ModelProviderName, defaultCharacter, Clients, Plugin } from 
 export const character: Character = {
   ...defaultCharacter,
   name: 'Eliza',
-  clients: [Clients.TWITTER, Clients.DISCORD, Clients.TELEGRAM], // Fixed: Use proper enum values
+  // clients: [Clients.TWITTER, Clients.DISCORD, Clients.TELEGRAM], // Fixed: Use proper enum values
+  clients: [],
   plugins: [], // Either provide proper Plugin objects or leave empty if no plugins needed
   modelProvider: ModelProviderName.ANTHROPIC,
   settings: {
