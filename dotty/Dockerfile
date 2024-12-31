@@ -36,7 +36,7 @@ COPY . .
 RUN pnpm install
 
 # Move to eliza directory
-WORKDIR /app/eliza
+WORKDIR /app/dotty
 
 # Expose port 3000
 EXPOSE 3000
