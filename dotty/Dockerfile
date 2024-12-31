@@ -6,6 +6,9 @@ RUN apt-get update && apt-get install -y \
     libpixman-1-dev libcairo2-dev libpango1.0-dev \
     build-essential
 
+# Install pnpm globally - moved before WORKDIR
+RUN npm install -g pnpm
+
 WORKDIR /app
 
 COPY pnpm-workspace.yaml ./
@@ -14,7 +17,9 @@ COPY pnpm-lock.yaml ./
 
 COPY . .
 
-RUN pnpm install --no-frozen-lockfile
+RUN pnpm install
+
+WORKDIR /app/dotty
 
 EXPOSE 3000
 
