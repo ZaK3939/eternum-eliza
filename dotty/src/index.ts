@@ -219,6 +219,7 @@ class DatabaseConnectionWrapper {
   async init() {
     while (this.retryCount < this.maxRetries) {
       try {
+        console.log('Attempting to initialize database connection...');
         await (this.db as IDatabaseAdapter).init();
         elizaLogger.log('Database connection established successfully');
         this.retryCount = 0; // Reset retry count on successful connection
