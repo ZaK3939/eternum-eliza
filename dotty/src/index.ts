@@ -32,10 +32,10 @@ import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { character } from './character.ts';
+import { character } from './character';
 import yargs from 'yargs';
 import readline from 'readline';
-import eternumPlugin from './eternum/index.ts';
+import eternumPlugin from './eternum';
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
