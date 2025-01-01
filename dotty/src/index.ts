@@ -157,6 +157,7 @@ class DatabaseConnectionWrapper {
   constructor(dataDir: string) {
     this.dataDir = dataDir;
     this.db = this.initializeDatabase();
+    console.log('initialized db', this.db);
     this.startKeepAlive();
   }
 
@@ -194,6 +195,7 @@ class DatabaseConnectionWrapper {
       // SQLite なら何もしない
       return;
     }
+    console.log('Starting keep-alive query...');
     // Run a keep-alive query every minute
     this.keepAliveInterval = setInterval(async () => {
       try {
