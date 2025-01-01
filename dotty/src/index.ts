@@ -177,6 +177,11 @@ class DatabaseConnectionWrapper {
           keepAlive: true,
           keepAliveInitialDelayMillis: 10000,
         },
+        statement_timeout: 5000,
+        query_timeout: 5000,
+        ssl: {
+          rejectUnauthorized: false,
+        },
       }) as IDatabaseAdapter & IDatabaseCacheAdapter;
     } else {
       const filePath = process.env.SQLITE_FILE ?? path.resolve(this.dataDir, 'db.sqlite');

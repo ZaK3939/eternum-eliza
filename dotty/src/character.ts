@@ -1,10 +1,11 @@
 import { Character, ModelProviderName, defaultCharacter, Clients, Plugin } from '@ai16z/eliza';
+import eternumPlugin from './eternum/index.ts';
 
 export const character: Character = {
   // ...defaultCharacter,
   name: 'Dotty',
   clients: [],
-  plugins: [],
+  plugins: [eternumPlugin],
   modelProvider: ModelProviderName.ANTHROPIC,
   settings: {
     secrets: {
