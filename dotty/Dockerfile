@@ -19,7 +19,7 @@ COPY . .
 
 RUN pnpm install
 
-WORKDIR /app/dotty
+WORKDIR /app
 
 EXPOSE 3000
 
