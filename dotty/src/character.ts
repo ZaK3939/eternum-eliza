@@ -3,7 +3,7 @@ import eternumPlugin from './eternum';
 
 export const character: Character = {
   ...defaultCharacter,
-  name: 'dotty',
+  name: 'Dotty',
   clients: [],
   plugins: [],
   modelProvider: ModelProviderName.ANTHROPIC,
@@ -32,7 +32,7 @@ export const character: Character = {
         },
       },
       {
-        user: 'EternumOracle',
+        user: 'Dotty',
         content: {
           text: 'Let me check our records. The Farm is our primary Wheat production facility.',
           action: 'QUERY_ETERNUM_BUILDINGS',
