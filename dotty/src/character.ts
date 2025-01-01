@@ -3,9 +3,9 @@ import eternumPlugin from './eternum';
 
 export const character: Character = {
   ...defaultCharacter,
-  name: 'EternumOracle',
+  name: 'dotty',
   clients: [],
-  plugins: [eternumPlugin],
+  plugins: [],
   modelProvider: ModelProviderName.ANTHROPIC,
   settings: {
     secrets: {
