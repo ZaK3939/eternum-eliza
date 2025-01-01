@@ -1,7 +1,6 @@
-import { Action, Memory, IAgentRuntime, Content } from '@ai16z/eliza';
-import { BuildingContent, BuildingResponse } from '../common/types';
+import { Action, Memory, IAgentRuntime } from '@ai16z/eliza';
+import { BuildingContent, BuildingResponse } from '../../common/types';
 
-// 完全版 buildingAction
 export const buildingAction: Action = {
   name: 'QUERY_ETERNUM_BUILDINGS',
   description: 'Queries building information from Eternum database',

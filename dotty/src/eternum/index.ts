@@ -1,6 +1,6 @@
 import { Plugin } from '@ai16z/eliza';
-import { buildingAction } from './action';
-import { DatabaseService } from '../common/db';
+import { buildingAction } from './actions';
+// import { DatabaseService } from '../common/db';
 
 export const eternumPlugin: Plugin = {
   name: 'eternum',
@@ -8,7 +8,7 @@ export const eternumPlugin: Plugin = {
   actions: [buildingAction],
   evaluators: [],
   providers: [],
-  services: [DatabaseService],
+  services: [],
 };
 
 export default eternumPlugin;
