@@ -1,1 +1,0 @@
-export { buildingAction } from './building';

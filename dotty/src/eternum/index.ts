@@ -1,5 +1,5 @@
 import { Plugin } from '@ai16z/eliza';
-import { buildingAction } from './actions';
+import { buildingAction } from '../eternum/actions/building';
 // import { DatabaseService } from '../common/db';
 
 export const eternumPlugin: Plugin = {
