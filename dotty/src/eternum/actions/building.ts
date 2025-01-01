@@ -1,5 +1,5 @@
 import { Action, Memory, IAgentRuntime } from '@ai16z/eliza';
-import { BuildingContent, BuildingResponse } from '../../common/types';
+import { BuildingContent, BuildingResponse } from '../../common/types.ts';
 
 export const buildingAction: Action = {
   name: 'QUERY_ETERNUM_BUILDINGS',

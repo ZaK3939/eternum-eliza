@@ -1,5 +1,5 @@
 import { Plugin } from '@ai16z/eliza';
-import { buildingAction } from './actions/building';
+import { buildingAction } from './actions/building.ts';
 
 export const eternumPlugin: Plugin = {
   name: 'eternum',
