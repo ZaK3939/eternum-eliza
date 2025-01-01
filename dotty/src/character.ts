@@ -8,7 +8,7 @@ export const character: Character = {
   modelProvider: ModelProviderName.ANTHROPIC,
   settings: {
     secrets: {
-      DATABASE_URL: process.env.DATABASE_URL,
+      DATABASE_URL: process.env.POSTGRES_URL,
     },
   },
   system:
