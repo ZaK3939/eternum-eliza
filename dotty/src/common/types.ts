@@ -42,11 +42,16 @@ export interface SearchPlugin extends Plugin {
   config: SearchPluginConfig;
 }
 
-export interface BuildingQueryResponse {
+// BuildingContent: ユーザー入力がどのような形式で来るか（例）
+export interface BuildingContent extends Content {
+  query: string;
+  type?: 'all' | 'by_resource' | 'by_capacity';
+  resource?: string;
+}
+
+// BuildingResponse: アクションが返すレスポンス
+export interface BuildingResponse {
   success: boolean;
   data: any[];
-}
-export interface BuildingQueryContent extends Content {
-  action: string;
-  response?: BuildingQueryResponse;
+  message: string;
 }

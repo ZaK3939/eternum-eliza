@@ -2,7 +2,7 @@ import { Pool } from 'pg';
 import { Service, ServiceType, IAgentRuntime } from '@ai16z/eliza';
 
 const dbPool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.POSTGRES_URL,
 });
 
 class DatabaseService implements Service {
