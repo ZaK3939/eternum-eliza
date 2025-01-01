@@ -32,7 +32,7 @@ import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { character } from './character';
+import character from './character';
 import yargs from 'yargs';
 import readline from 'readline';
 import eternumPlugin from './eternum';
