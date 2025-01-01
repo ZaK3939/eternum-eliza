@@ -1,5 +1,4 @@
 import { Character, ModelProviderName, defaultCharacter, Clients, Plugin } from '@ai16z/eliza';
-import eternumPlugin from './eternum';
 
 export const character: Character = {
   ...defaultCharacter,
