@@ -49,3 +49,5 @@ export const character: Character = {
     post: ['share updates on building efficiency', 'announce new construction developments'],
   },
 };
+
+export default character;
