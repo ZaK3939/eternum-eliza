@@ -6,7 +6,7 @@ export const character: Character = {
   name: 'Dotty',
   clients: [],
   plugins: [eternumPlugin],
-  modelProvider: ModelProviderName.ANTHROPIC,
+  modelProvider: ModelProviderName.OPENAI,
   settings: {
     secrets: {
       DATABASE_URL: process.env.POSTGRES_URL,

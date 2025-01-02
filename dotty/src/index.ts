@@ -36,6 +36,7 @@ import { character } from './character.ts';
 import yargs from 'yargs';
 import readline from 'readline';
 import eternumPlugin from './eternum/index.ts';
+import { buildingQueryEvaluator } from './eternum/evaluator.ts';
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -201,6 +202,7 @@ class DatabaseConnectionWrapper {
       try {
         await (this.db as any).query('SELECT 1');
         elizaLogger.log('Keep-alive query successful');
+        console.log('character');
         this._isHealthy = true;
       } catch (error) {
         elizaLogger.error('Keep-alive query failed:', error);
@@ -331,7 +333,6 @@ export function createAgent(character: Character, db: IDatabaseAdapter, cache: I
     databaseAdapter: db,
     token,
     modelProvider: character.modelProvider,
-    evaluators: [],
     character,
     plugins: [
       bootstrapPlugin,
@@ -340,9 +341,10 @@ export function createAgent(character: Character, db: IDatabaseAdapter, cache: I
       character.settings.secrets?.WALLET_PUBLIC_KEY ? solanaPlugin : null,
     ].filter(Boolean),
     providers: [],
-    actions: [],
+    // actions: [],
     services: [],
     managers: [],
+    // evaluators: [buildingQueryEvaluator],
     cacheManager: cache,
   });
 }
