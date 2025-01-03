@@ -1,19 +1,41 @@
--- Create buildings table with CHECK constraint instead of ENUM
+-- Drop existing tables if they exist
+DROP TABLE IF EXISTS building_productions CASCADE;
+DROP TABLE IF EXISTS building_costs CASCADE;
+DROP TABLE IF EXISTS building_inputs CASCADE;
+DROP TABLE IF EXISTS building_outputs CASCADE;
+DROP TABLE IF EXISTS buildings CASCADE;
+DROP TABLE IF EXISTS resources CASCADE;
+
+-- Create resources table with additional metadata
+CREATE TABLE resources (
+id INTEGER PRIMARY KEY,
+name VARCHAR(100) NOT NULL UNIQUE,
+ticker VARCHAR(10) NOT NULL,
+trait VARCHAR(100) NOT NULL,
+description TEXT,
+colour VARCHAR(7),
+tier VARCHAR(20) NOT NULL,
+value INTEGER,
+weight_grams INTEGER,
+rarity DECIMAL(10,2),
+output_rate DECIMAL(10,4),
+img_url TEXT,
+created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+CONSTRAINT valid_tier CHECK (tier IN ('lords', 'military', 'transport', 'food', 'common', 'uncommon', 'rare', 'unique', 'mythic'))
+);
+
+-- Create buildings table
 CREATE TABLE buildings (
 id SERIAL PRIMARY KEY,
 name VARCHAR(100) NOT NULL,
 category VARCHAR(50) NOT NULL,
 population_capacity INTEGER NOT NULL,
 description TEXT,
+strategic_effects TEXT,
+adjacent_bonus TEXT,
+production_rate INTEGER,
 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 CONSTRAINT valid_category CHECK (category IN ('basic_infrastructure', 'production', 'military'))
-);
-
--- Create resources table
-CREATE TABLE resources (
-id SERIAL PRIMARY KEY,
-name VARCHAR(100) NOT NULL UNIQUE,
-created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create building costs junction table
@@ -26,110 +48,85 @@ created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 UNIQUE(building_id, resource_id)
 );
 
--- Create building productions table
-CREATE TABLE building_productions (
+-- Create building inputs table (resources needed for production)
+CREATE TABLE building_inputs (
 id SERIAL PRIMARY KEY,
 building_id INTEGER REFERENCES buildings(id),
 resource_id INTEGER REFERENCES resources(id),
+amount DECIMAL(10,4) NOT NULL,
 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 UNIQUE(building_id, resource_id)
 );
 
--- Insert resources
-INSERT INTO resources (name) VALUES
-('Wheat'),
-('Stone'),
-('Wood'),
-('Coal'),
-('Fish'),
-('Sapphire'),
-('Obsidian'),
-('Ruby'),
-('Deep Crystal'),
-('Silver'),
-('Gold'),
-('Ironwood'),
-('Hartwood'),
-('Donkeys');
+-- Create building outputs table
+CREATE TABLE building_outputs (
+id SERIAL PRIMARY KEY,
+building_id INTEGER REFERENCES buildings(id),
+resource_id INTEGER REFERENCES resources(id),
+rate INTEGER NOT NULL,
+created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+UNIQUE(building_id, resource_id)
+);
 
--- Insert buildings
-INSERT INTO buildings (name, category, population_capacity, description) VALUES
-('Worker Hut', 'basic_infrastructure', 5, 'Basic population housing'),
-('Storehouse', 'basic_infrastructure', 2, 'Increases resource storage capacity'),
-('Farm', 'production', 1, 'Produces Wheat'),
-('Fishing Village', 'production', 1, 'Produces Fish'),
-('Market', 'production', 3, 'Produces Donkeys and essential for trading'),
-('Resource Facility', 'production', 2, 'Produces specified resource'),
-('Barracks', 'military', 2, 'Produces Knights and increases max army count'),
-('Stables', 'military', 3, 'Produces Paladins and increases max army count'),
-('Archery Range', 'military', 2, 'Produces Crossbowmen and provides ranged combat');
+-- Create building productions table (final production data)
+CREATE TABLE building_productions (
+id SERIAL PRIMARY KEY,
+building_id INTEGER REFERENCES buildings(id),
+resource_id INTEGER REFERENCES resources(id),
+rate INTEGER,
+created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+UNIQUE(building_id, resource_id)
+);
 
--- Insert building costs
-INSERT INTO building_costs (building_id, resource_id, amount) VALUES
--- Worker Hut costs
-(1, (SELECT id FROM resources WHERE name = 'Wheat'), 300000),
-(1, (SELECT id FROM resources WHERE name = 'Stone'), 75000),
-(1, (SELECT id FROM resources WHERE name = 'Wood'), 75000),
-(1, (SELECT id FROM resources WHERE name = 'Coal'), 75000),
+-- Create indexes
+CREATE INDEX idx_resources_tier ON resources(tier);
+CREATE INDEX idx_resources_name ON resources(name);
+CREATE INDEX idx_building_costs_building_id ON building_costs(building_id);
+CREATE INDEX idx_building_costs_resource_id ON building_costs(resource_id);
+CREATE INDEX idx_building_inputs_building_id ON building_inputs(building_id);
+CREATE INDEX idx_building_outputs_building_id ON building_outputs(building_id);
+CREATE INDEX idx_building_productions_building_id ON building_productions(building_id);
 
-    -- Storehouse costs
-    (2, (SELECT id FROM resources WHERE name = 'Fish'), 1000000),
-    (2, (SELECT id FROM resources WHERE name = 'Coal'), 75000),
-    (2, (SELECT id FROM resources WHERE name = 'Stone'), 75000),
-    (2, (SELECT id FROM resources WHERE name = 'Sapphire'), 10000),
-
-    -- Farm costs
-    (3, (SELECT id FROM resources WHERE name = 'Fish'), 450000),
-
-    -- Fishing Village costs
-    (4, (SELECT id FROM resources WHERE name = 'Wheat'), 450000),
-
-    -- Market costs
-    (5, (SELECT id FROM resources WHERE name = 'Fish'), 750000),
-    (5, (SELECT id FROM resources WHERE name = 'Stone'), 125000),
-    (5, (SELECT id FROM resources WHERE name = 'Obsidian'), 50000),
-    (5, (SELECT id FROM resources WHERE name = 'Ruby'), 25000),
-    (5, (SELECT id FROM resources WHERE name = 'Deep Crystal'), 5000);
-
--- Insert building productions
-INSERT INTO building_productions (building_id, resource_id) VALUES
-(3, (SELECT id FROM resources WHERE name = 'Wheat')),
-(4, (SELECT id FROM resources WHERE name = 'Fish')),
-(5, (SELECT id FROM resources WHERE name = 'Donkeys'));
-
--- Create useful views with NULL handling
-CREATE VIEW building_details AS
+-- Create view for building details
+CREATE OR REPLACE VIEW building_details AS
 SELECT
 b.name as building_name,
 b.category,
 b.population_capacity,
 b.description,
-COALESCE(
+b.strategic_effects,
+b.production_rate,
 json_agg(
-CASE
-WHEN r.name IS NOT NULL THEN
 json_build_object(
 'resource', r.name,
+'ticker', r.ticker,
 'amount', bc.amount
 )
-ELSE NULL
-END
-) FILTER (WHERE r.name IS NOT NULL),
-'[]'::json
-) as costs,
-COALESCE(
-array_agg(DISTINCT rp.name) FILTER (WHERE rp.name IS NOT NULL),
-ARRAY[]::varchar[]
-) as produces
+) FILTER (WHERE r.name IS NOT NULL) as costs,
+json_agg(
+json_build_object(
+'resource', rp.name,
+'rate', bp.rate
+)
+) FILTER (WHERE rp.name IS NOT NULL) as productions,
+json_agg(
+json_build_object(
+'resource', ri.name,
+'amount', bi.amount
+)
+) FILTER (WHERE ri.name IS NOT NULL) as inputs
 FROM buildings b
 LEFT JOIN building_costs bc ON b.id = bc.building_id
 LEFT JOIN resources r ON bc.resource_id = r.id
 LEFT JOIN building_productions bp ON b.id = bp.building_id
 LEFT JOIN resources rp ON bp.resource_id = rp.id
-GROUP BY b.id, b.name, b.category, b.population_capacity, b.description;
-
--- Create indexes for better query performance
-CREATE INDEX idx_building_costs_building_id ON building_costs(building_id);
-CREATE INDEX idx_building_costs_resource_id ON building_costs(resource_id);
-CREATE INDEX idx_building_productions_building_id ON building_productions(building_id);
-CREATE INDEX idx_building_productions_resource_id ON building_productions(resource_id);
+LEFT JOIN building_inputs bi ON b.id = bi.building_id
+LEFT JOIN resources ri ON bi.resource_id = ri.id
+GROUP BY
+b.id,
+b.name,
+b.category,
+b.population_capacity,
+b.description,
+b.strategic_effects,
+b.production_rate;

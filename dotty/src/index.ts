@@ -23,9 +23,9 @@ import {
   stringToUuid,
   validateCharacterConfig,
 } from '@ai16z/eliza';
-import { bootstrapPlugin } from '@ai16z/plugin-bootstrap';
 import { DirectClient } from '@ai16z/client-direct';
 import dotenv from 'dotenv';
+import { bootstrapPlugin } from '@ai16z/plugin-bootstrap';
 import { createNodePlugin } from '@ai16z/plugin-node';
 import { solanaPlugin } from '@ai16z/plugin-solana';
 import Database from 'better-sqlite3';
@@ -36,7 +36,6 @@ import { character } from './character.ts';
 import yargs from 'yargs';
 import readline from 'readline';
 import eternumPlugin from './eternum/index.ts';
-import { buildingQueryEvaluator } from './eternum/evaluator.ts';
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -158,7 +157,6 @@ class DatabaseConnectionWrapper {
   constructor(dataDir: string) {
     this.dataDir = dataDir;
     this.db = this.initializeDatabase();
-    console.log('initialized db', this.db);
     this.startKeepAlive();
   }
 
@@ -341,10 +339,10 @@ export function createAgent(character: Character, db: IDatabaseAdapter, cache: I
       character.settings.secrets?.WALLET_PUBLIC_KEY ? solanaPlugin : null,
     ].filter(Boolean),
     providers: [],
-    // actions: [],
+    actions: [],
     services: [],
     managers: [],
-    // evaluators: [buildingQueryEvaluator],
+    evaluators: [],
     cacheManager: cache,
   });
 }
@@ -376,8 +374,6 @@ async function startAgent(character: Character, directClient: DirectClient) {
 
     const cache = intializeDbCache(character, db);
     runtime = createAgent(character, db, cache, token) as AgentRuntime;
-
-    runtime.actions = runtime.actions.filter((a) => a.name === 'generate_image'.toUpperCase());
 
     runtime.actions.map((a) => console.log(a.name + ' ' + a.description));
 

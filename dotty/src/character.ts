@@ -2,7 +2,6 @@ import { Character, ModelProviderName, defaultCharacter, Clients, Plugin } from 
 import eternumPlugin from './eternum/index.ts';
 
 export const character: Character = {
-  // ...defaultCharacter,
   name: 'Dotty',
   clients: [],
   plugins: [eternumPlugin],

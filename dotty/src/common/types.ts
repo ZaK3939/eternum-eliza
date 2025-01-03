@@ -42,16 +42,59 @@ export interface SearchPlugin extends Plugin {
   config: SearchPluginConfig;
 }
 
-// BuildingContent: ユーザー入力がどのような形式で来るか（例）
 export interface BuildingContent extends Content {
-  query: string;
+  text: string;
+  query?: string;
   type?: 'all' | 'by_resource' | 'by_capacity';
   resource?: string;
+  [key: string]: any; // インデックスシグネチャを追加
 }
 
-// BuildingResponse: アクションが返すレスポンス
+export interface BuildingData {
+  building_name: string;
+  category: string;
+  population_capacity: number;
+  description: string;
+  resource_name?: string;
+}
+
 export interface BuildingResponse {
   success: boolean;
-  data: any[];
+  data: BuildingData[];
   message: string;
+  action: string;
+  text: string;
+}
+
+// アクション例の型
+export interface BuildingActionExample {
+  user: string;
+  content: BuildingContent;
+}
+
+// アクション応答の型
+export interface BuildingActionResponse {
+  user: string;
+  content: {
+    text: string;
+    action: string;
+    data: BuildingData[];
+  };
+}
+
+export interface ResourceContent extends Content {
+  text: string;
+  type?: 'all' | 'by_tier' | 'by_name' | 'by_rarity';
+  tier?: string;
+  name?: string;
+  rarity?: number;
+  response?: {
+    success: boolean;
+    data: any[];
+    message?: string;
+    sqlResult?: {
+      rowCount: number;
+      rows: any[];
+    };
+  };
 }
