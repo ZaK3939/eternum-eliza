@@ -1,5 +1,5 @@
 // resources.evaluator.ts
-import { Evaluator, IAgentRuntime, Memory } from '@ai16z/eliza';
+import { Evaluator, IAgentRuntime, Memory } from '@eliza/core';
 import { ResourceContent } from '../../common/types.ts';
 
 export const resourceQueryEvaluator: Evaluator = {
@@ -70,6 +70,7 @@ export const resourceQueryEvaluator: Evaluator = {
   validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
     const content = message.content as ResourceContent;
     console.log('Validating resource query:', content);
+    console.log('Action after validation:', content.action);
 
     // テキスト内容からタイプとパラメータを推論
     if (!content.type) {
@@ -103,13 +104,14 @@ export const resourceQueryEvaluator: Evaluator = {
         if (!validFields) return false;
       }
     }
-
+    console.log('Resource query validation successful');
+    console.log('Content:', content);
     return true;
   },
 
   handler: async (runtime: IAgentRuntime, message: Memory) => {
     const content = message.content as ResourceContent;
-
+    console.log('[eval]Resource query initiated:', content);
     // レスポンスがない場合は初期クエリとして扱う
     if (!content.response) {
       return {

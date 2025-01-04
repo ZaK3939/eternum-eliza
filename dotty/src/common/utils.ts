@@ -1,4 +1,4 @@
-import { Content } from '@ai16z/eliza';
+import { Content } from '@eliza/core';
 import { SearchPluginConfig, SearchResult } from './types.ts';
 
 export class ApiError extends Error {

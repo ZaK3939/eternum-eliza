@@ -1,10 +1,9 @@
-import { PostgresDatabaseAdapter } from '@ai16z/adapter-postgres';
-import { SqliteDatabaseAdapter } from '@ai16z/adapter-sqlite';
-import { AutoClientInterface } from '@ai16z/client-auto';
-import { DirectClientInterface } from '@ai16z/client-direct';
-import { DiscordClientInterface } from '@ai16z/client-discord';
-import { TelegramClientInterface } from '@ai16z/client-telegram';
-import { TwitterClientInterface } from '@ai16z/client-twitter';
+import { PostgresDatabaseAdapter } from '@eliza/adapter-postgres';
+import { AutoClientInterface } from '@eliza/client-auto';
+import { DirectClientInterface } from '@eliza/client-direct';
+import { DiscordClientInterface } from '@eliza/client-discord';
+import { TelegramClientInterface } from '@eliza/client-telegram';
+import { TwitterClientInterface } from '@eliza/client-twitter';
 import {
   AgentRuntime,
   CacheManager,
@@ -22,12 +21,12 @@ import {
   settings,
   stringToUuid,
   validateCharacterConfig,
-} from '@ai16z/eliza';
-import { DirectClient } from '@ai16z/client-direct';
+} from '@eliza/core';
+import { DirectClient } from '@eliza/client-direct';
 import dotenv from 'dotenv';
-import { bootstrapPlugin } from '@ai16z/plugin-bootstrap';
-import { createNodePlugin } from '@ai16z/plugin-node';
-import { solanaPlugin } from '@ai16z/plugin-solana';
+import { bootstrapPlugin } from '@eliza/plugin-bootstrap';
+import { createNodePlugin } from '@eliza/plugin-node';
+import { solanaPlugin } from '@eliza/plugin-solana';
 import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
@@ -36,6 +35,7 @@ import { character } from './character.ts';
 import yargs from 'yargs';
 import readline from 'readline';
 import eternumPlugin from './eternum/index.ts';
+import { DatabaseConnectionWrapper } from './common/db.ts';
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -142,118 +142,6 @@ export function getTokenForProvider(provider: ModelProviderName, character: Char
       return character.settings?.secrets?.HEURIST_API_KEY || settings.HEURIST_API_KEY;
     case ModelProviderName.GROQ:
       return character.settings?.secrets?.GROQ_API_KEY || settings.GROQ_API_KEY;
-  }
-}
-
-class DatabaseConnectionWrapper {
-  private db: IDatabaseAdapter & IDatabaseCacheAdapter;
-  private dataDir: string;
-  private retryCount: number = 0;
-  private maxRetries: number = 5;
-  private retryDelay: number = 5000; // 5 seconds
-  private keepAliveInterval: NodeJS.Timeout | null = null;
-  private _isHealthy: boolean = false;
-
-  constructor(dataDir: string) {
-    this.dataDir = dataDir;
-    this.db = this.initializeDatabase();
-    this.startKeepAlive();
-  }
-
-  get isHealthy(): boolean {
-    return this._isHealthy;
-  }
-
-  private initializeDatabase(): IDatabaseAdapter & IDatabaseCacheAdapter {
-    if (process.env.POSTGRES_URL) {
-      return new PostgresDatabaseAdapter({
-        connectionString: process.env.POSTGRES_URL,
-        pool: {
-          max: 20,
-          min: 5,
-          idleTimeoutMillis: 300000,
-          connectionTimeoutMillis: 10000,
-          allowExitOnIdle: false,
-          keepAlive: true,
-          keepAliveInitialDelayMillis: 10000,
-        },
-        statement_timeout: 5000,
-        query_timeout: 5000,
-        ssl: {
-          rejectUnauthorized: false,
-        },
-      }) as IDatabaseAdapter & IDatabaseCacheAdapter;
-    } else {
-      const filePath = process.env.SQLITE_FILE ?? path.resolve(this.dataDir, 'db.sqlite');
-      return new SqliteDatabaseAdapter(new Database(filePath)) as IDatabaseAdapter & IDatabaseCacheAdapter;
-    }
-  }
-
-  private startKeepAlive() {
-    if (!process.env.POSTGRES_URL) {
-      // SQLite なら何もしない
-      return;
-    }
-    console.log('Starting keep-alive query...');
-    // Run a keep-alive query every minute
-    this.keepAliveInterval = setInterval(async () => {
-      try {
-        await (this.db as any).query('SELECT 1');
-        elizaLogger.log('Keep-alive query successful');
-        console.log('character');
-        this._isHealthy = true;
-      } catch (error) {
-        elizaLogger.error('Keep-alive query failed:', error);
-        this._isHealthy = false;
-        await this.reconnect();
-      }
-    }, 60000);
-  }
-
-  private async reconnect() {
-    elizaLogger.log('Attempting to reconnect to database...');
-    this.db = this.initializeDatabase();
-    await this.init();
-  }
-
-  async init() {
-    while (this.retryCount < this.maxRetries) {
-      try {
-        console.log('Attempting to initialize database connection...');
-        await (this.db as IDatabaseAdapter).init();
-        elizaLogger.log('Database connection established successfully');
-        this.retryCount = 0; // Reset retry count on successful connection
-        this._isHealthy = true;
-        return;
-      } catch (error) {
-        this.retryCount++;
-        elizaLogger.error(`Database initialization error (attempt ${this.retryCount}/${this.maxRetries}):`, error);
-        this._isHealthy = false;
-
-        if (this.retryCount < this.maxRetries) {
-          elizaLogger.log(`Retrying database connection in ${this.retryDelay / 1000} seconds...`);
-          await new Promise((resolve) => setTimeout(resolve, this.retryDelay));
-          this.db = this.initializeDatabase();
-        } else {
-          throw new Error(`Failed to initialize database after ${this.maxRetries} attempts`);
-        }
-      }
-    }
-  }
-
-  async cleanup() {
-    if (this.keepAliveInterval) {
-      clearInterval(this.keepAliveInterval);
-    }
-    try {
-      await (this.db as any).end?.();
-    } catch (error) {
-      elizaLogger.error('Error cleaning up database connection:', error);
-    }
-  }
-
-  getAdapter(): IDatabaseAdapter & IDatabaseCacheAdapter {
-    return this.db;
   }
 }
 
@@ -375,13 +263,11 @@ async function startAgent(character: Character, directClient: DirectClient) {
     const cache = intializeDbCache(character, db);
     runtime = createAgent(character, db, cache, token) as AgentRuntime;
 
-    runtime.actions.map((a) => console.log(a.name + ' ' + a.description));
-
     try {
       await runtime.initialize();
       console.log('=== Available Actions ===');
       runtime.actions.forEach((action) => {
-        console.log(`${action.name} - ${action.description}`);
+        console.log(`${action.name}`);
       });
     } catch (error) {
       elizaLogger.error('Failed to initialize runtime:', error);
@@ -489,12 +375,11 @@ const startAgents = async () => {
   let charactersArg = args.characters || args.character;
 
   let characters = [character];
-  console.log('charactersArg', charactersArg);
-  console.log('characters', characters);
+
   if (charactersArg) {
     characters = await loadCharacters(charactersArg);
   }
-  console.log('characters', characters);
+
   try {
     for (const character of characters) {
       await startAgent(character, directClient as DirectClient);
@@ -503,20 +388,6 @@ const startAgents = async () => {
     elizaLogger.error('Error starting agents:', error);
   }
 
-  // function chat() {
-  //   const agentId = characters[0].name ?? 'Agent';
-  //   rl.question('You: ', async (input) => {
-  //     await handleUserInput(input, agentId);
-  //     if (input.toLowerCase() !== 'exit') {
-  //       chat(); // Loop back to ask another question
-  //     }
-  //   });
-  // }
-
-  // elizaLogger.log("Chat started. Type 'exit' to quit.");
-  // chat();
-  console.log('Direct client starting on port', serverPort);
-  console.log('agentId', characters[0].name);
   directClient.start(serverPort);
 };
 
@@ -534,30 +405,3 @@ rl.on('SIGINT', () => {
   rl.close();
   process.exit(0);
 });
-
-async function handleUserInput(input, agentId) {
-  if (input.toLowerCase() === 'exit') {
-    rl.close();
-    process.exit(0);
-    return;
-  }
-
-  try {
-    const serverPort = parseInt(settings.SERVER_PORT || '3000');
-
-    const response = await fetch(`http://localhost:${serverPort}/${agentId}/message`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        text: input,
-        userId: 'user',
-        userName: 'User',
-      }),
-    });
-
-    const data = await response.json();
-    data.forEach((message) => console.log(`${'Agent'}: ${message.text}`));
-  } catch (error) {
-    console.error('Error fetching response:', error);
-  }
-}

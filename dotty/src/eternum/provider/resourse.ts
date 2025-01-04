@@ -1,6 +1,7 @@
 // resourceQueryProvider.ts
-import { Provider, IAgentRuntime, Memory, State } from '@ai16z/eliza';
-import PostgresDatabaseAdapter from '@ai16z/adapter-postgres';
+import { Provider, IAgentRuntime, Memory, State, IDatabaseAdapter } from '@eliza/core';
+import PostgresDatabaseAdapter from '@eliza/adapter-postgres';
+import { QueryResult } from 'pg';
 
 export interface ResourceQueryParams {
   type: 'all' | 'by_tier' | 'by_name' | 'by_rarity';
@@ -21,8 +22,15 @@ export interface ResourceQueryResult {
 
 export const resourceQueryProvider: Provider = {
   async get(runtime: IAgentRuntime, message: Memory, state?: State): Promise<ResourceQueryResult[]> {
-    const dbAdapter = runtime.databaseAdapter as PostgresDatabaseAdapter;
-    const content = message.content;
+    if (!('query' in runtime.databaseAdapter)) {
+      throw new Error('Database adapter does not support query method');
+    }
+
+    const dbAdapter = runtime.databaseAdapter as IDatabaseAdapter & {
+      query: <T = any>(query: string, values?: any[]) => Promise<QueryResult<T>>;
+    };
+
+    const params = message.content as unknown as ResourceQueryParams;
 
     const baseQuery = `
       SELECT 
@@ -38,23 +46,29 @@ export const resourceQueryProvider: Provider = {
     let whereClause = '';
     let queryParams: any[] = [];
 
-    // メッセージのコンテンツからクエリパラメータを抽出
-    const type = content.type || 'all';
+    // クエリパラメータを抽出
+    const type = params.type || 'all';
 
     switch (type) {
       case 'by_tier':
-        whereClause = 'WHERE LOWER(tier) = LOWER($1)';
-        queryParams = [content.tier];
+        if (params.tier) {
+          whereClause = 'WHERE LOWER(tier) = LOWER($1)';
+          queryParams = [params.tier];
+        }
         break;
 
       case 'by_name':
-        whereClause = 'WHERE LOWER(name) = LOWER($1)';
-        queryParams = [content.name];
+        if (params.name) {
+          whereClause = 'WHERE LOWER(name) = LOWER($1)';
+          queryParams = [params.name];
+        }
         break;
 
       case 'by_rarity':
-        whereClause = 'WHERE rarity >= $1';
-        queryParams = [content.rarity];
+        if (params.rarity !== undefined) {
+          whereClause = 'WHERE rarity >= $1';
+          queryParams = [params.rarity];
+        }
         break;
 
       default:
@@ -65,7 +79,8 @@ export const resourceQueryProvider: Provider = {
     const finalQuery = [baseQuery, whereClause, orderByClause].filter(Boolean).join(' ');
 
     try {
-      const result = await dbAdapter.query(finalQuery, queryParams);
+      const result = await dbAdapter.query<ResourceQueryResult>(finalQuery, queryParams);
+      console.log('Resource query result:', result.rows);
       return result.rows;
     } catch (error) {
       console.error('Resource query provider error:', error);

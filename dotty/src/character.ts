@@ -1,10 +1,9 @@
-import { Character, ModelProviderName, defaultCharacter, Clients, Plugin } from '@ai16z/eliza';
-import eternumPlugin from './eternum/index.ts';
+import { Character, ModelProviderName, defaultCharacter, Clients, Plugin } from '@eliza/core';
 
 export const character: Character = {
   name: 'Dotty',
   clients: [],
-  plugins: [eternumPlugin],
+  plugins: [],
   modelProvider: ModelProviderName.OPENAI,
   settings: {
     secrets: {

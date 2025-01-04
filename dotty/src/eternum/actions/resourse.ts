@@ -1,8 +1,17 @@
 // resources.action.ts
-import { Action, Memory, IAgentRuntime, HandlerCallback, Content } from '@ai16z/eliza';
-import PostgresDatabaseAdapter from '@ai16z/adapter-postgres';
+import {
+  Action,
+  Memory,
+  IAgentRuntime,
+  HandlerCallback,
+  Content,
+  composeContext,
+  generateMessageResponse,
+  ModelClass,
+} from '@eliza/core';
 import { ResourceContent } from '../../common/types.ts';
 import resourceQueryProvider from '../provider/resourse.ts';
+import { messageHandlerTemplate } from '@eliza/client-direct';
 
 export const resourcesAction: Action = {
   name: 'QUERY_ETERNUM_RESOURCES',
@@ -75,83 +84,96 @@ export const resourcesAction: Action = {
     try {
       // Providerを使用してデータを取得
       const resources = await resourceQueryProvider.get(runtime, message);
+      console.log('Retrieved resources:', resources);
 
-      // レスポンステキストの生成
-      const responseText = generateResourceResponse(
-        resources,
-        message.content.type as string,
-        message.content.tier as string,
-      );
+      // テキストを更新
+      const resource = resources[0];
+      message.content.text =
+        `Resource Name: ${resource.name} (${resource.ticker})\n` +
+        `Tier: ${resource.tier}\n` +
+        `Description: ${resource.description}\n` +
+        `Rarity: ${resource.rarity}, Value: ${resource.value}\n` +
+        `Color: ${resource.colour}\n`;
 
-      await runtime.processActions(message, [], undefined, (response: Content) => {
-        const updatedMemory: Memory = {
-          userId: message.userId,
-          agentId: message.agentId,
-          roomId: message.roomId,
-          content: {
-            text: responseText,
-            action: 'QUERY_ETERNUM_RESOURCES',
-            actionResponse: {
-              success: true,
-              data: resources,
-              message: `Found ${resources.length} resources`,
-            },
-          },
-        };
-        return Promise.resolve([updatedMemory]);
+      message.content.actionResponse = {
+        success: true,
+        data: resources,
+        message: `Found ${resources.length} resources.`,
+      };
+
+      console.log('Updated text:', message.content.text);
+
+      // 再度 `generateMessageResponse` を実行
+      const state = await runtime.composeState(message, {
+        agentName: runtime.character.name,
       });
+      const context = composeContext({
+        state,
+        template: messageHandlerTemplate,
+      });
+
+      const response = await generateMessageResponse({
+        runtime,
+        context,
+        modelClass: ModelClass.LARGE,
+      });
+
+      // 生成されたレスポンスを保存
+      const responseMessage = {
+        ...message,
+        userId: runtime.agentId,
+        content: response,
+      };
+      console.log('Updated Response Message:', responseMessage);
+
+      await runtime.messageManager.createMemory(responseMessage);
     } catch (error) {
       console.error('Resource action error:', error);
-      await runtime.processActions(message, [], undefined, (response: Content) => {
-        const errorMemory: Memory = {
-          userId: message.userId,
-          agentId: message.agentId,
-          roomId: message.roomId,
-          content: {
-            text: "I apologize, but I'm having trouble accessing the resource records at the moment.",
-            action: 'QUERY_ETERNUM_RESOURCES',
-            actionResponse: {
-              success: false,
-              data: [],
-              message: error instanceof Error ? error.message : 'Query failed',
-            },
-          },
-        };
-        return Promise.resolve([errorMemory]);
-      });
+
+      // エラー発生時のテキスト
+      message.content.text = "I apologize, but I'm having trouble accessing the resource records at the moment.";
+      message.content.actionResponse = {
+        success: false,
+        data: [],
+        message: error instanceof Error ? error.message : 'Query failed',
+      };
+
+      await runtime.messageManager.createMemory(message);
     }
   },
 };
 
 function generateResourceResponse(resources: any[], type?: string, tier?: string): string {
   if (!resources || resources.length === 0) {
-    return tier
-      ? `I apologize, but I couldn't find any ${tier} tier resources.`
-      : `I apologize, but I couldn't find any matching resources.`;
+    return tier ? `I couldn't find any ${tier} tier resources.` : `No resources found.`;
   }
 
   let response = '';
 
   switch (type) {
-    case 'by_tier':
-      response = `Here are the ${tier} tier resources in our records:\n`;
-      resources.forEach((resource) => {
-        response += `\n${resource.name} (${resource.ticker}): ${resource.description} Rarity: ${resource.rarity}`;
-      });
-      break;
-
-    case 'by_name':
+    case 'by_name': {
       const resource = resources[0];
-      response = `${resource.name} (${resource.ticker}) is a ${resource.tier} tier resource.\n`;
-      response += `${resource.description}\n`;
-      response += `Rarity: ${resource.rarity}`;
+      response = `Resource Name: ${resource.name} (${resource.ticker})\n`;
+      response += `Tier: ${resource.tier}\n`;
+      response += `Description: ${resource.description}\n`;
+      response += `Rarity: ${resource.rarity}, Value: ${resource.value}\n`;
+      response += `Color: ${resource.colour}\n`;
       break;
-
-    default:
-      response = `I found ${resources.length} resources in our records. Here are some notable ones:\n`;
-      resources.slice(0, 3).forEach((resource) => {
-        response += `\n${resource.name} (${resource.tier} tier): ${resource.description}`;
+    }
+    case 'by_tier': {
+      response = `Here are the ${tier} tier resources:\n`;
+      resources.forEach((resource) => {
+        response += `\n- ${resource.name} (${resource.ticker}): ${resource.description}`;
+        response += `\n  Rarity: ${resource.rarity}, Value: ${resource.value}`;
       });
+      break;
+    }
+    default: {
+      response = `I found ${resources.length} resources. Here are some notable ones:\n`;
+      resources.slice(0, 3).forEach((resource) => {
+        response += `\n- ${resource.name} (${resource.tier}): ${resource.description}`;
+      });
+    }
   }
 
   return response;

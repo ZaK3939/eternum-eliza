@@ -5,7 +5,7 @@
     "lib": ["ESNext", "dom"],
     "moduleResolution": "bundler",
     "outDir": "./dist",
-    "rootDir": ".",
+    "rootDir": "../",
     "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -18,7 +18,13 @@
     "allowJs": true,
     "checkJs": false,
     "noEmitOnError": false,
-    "moduleDetection": "force"
+    "moduleDetection": "force",
     // "allowArbitraryExtensions": true
-  }
+    "baseUrl": ".",
+    "paths": {
+      "@eliza/*": ["../packages/eliza/packages/*/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

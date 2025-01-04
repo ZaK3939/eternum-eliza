@@ -1,4 +1,4 @@
-import { Plugin, Action, Content, ActionExample, Handler, Validator } from '@ai16z/eliza';
+import { Plugin, Action, Content, ActionExample, Handler, Validator } from '@eliza/core';
 
 export interface SearchResult {
   title: string;
@@ -40,6 +40,19 @@ export interface SearchPlugin extends Plugin {
   description: string;
   actions: SearchAction[];
   config: SearchPluginConfig;
+}
+
+// BuildingQueryContent: ユーザーまたはアクション実行後のメッセージ構造
+export interface BuildingQueryContent {
+  text: string;
+  [key: string]: any;
+  response?: {
+    success: boolean;
+    data: any[];
+    message?: string;
+  };
+  type?: 'all' | 'by_resource' | 'by_capacity';
+  resource?: string;
 }
 
 export interface BuildingContent extends Content {
