@@ -1,152 +1,70 @@
-// resources.evaluator.ts
 import { Evaluator, IAgentRuntime, Memory } from '@elizaos/core';
-import { ResourceContent } from '../../common/types.ts';
+import { ResourceQueryParams } from '../provider/resourceQueryProvider.ts';
 
+/**
+ * resourceQueryEvaluator:
+ * ユーザーが「Tell me about X」「Show me all resources」「tier: common」などと言ったとき、
+ * message.content に type/name/tier/rarity をセットし、 action='RESOURCE_QUERY' を仕込む
+ */
 export const resourceQueryEvaluator: Evaluator = {
-  name: 'VALIDATE_RESOURCE_QUERY',
-  description: 'Validates resource query results',
-  similes: [
-    'GET_RESOURCES',
-    'SEARCH_RESOURCES',
-    'FIND_RESOURCES',
-    'CHECK_RESOURCES',
-    'LOOKUP_RESOURCES',
-    'CONSULT_RESOURCE_RECORDS',
-    'GET_RESOURCE_DETAILS',
-    'RESOURCE_INFO',
-  ],
-
+  name: 'RESOURCE_QUERY_EVALUATOR',
+  description: 'Parse user messages to set resource query params, sets action=RESOURCE_QUERY',
+  similes: ['GET_RESOURCES', 'LOOKUP_RESOURCE', 'SEARCH_RESOURCE', 'FIND_RESOURCE', 'RESOURCE_QUERY'],
   examples: [
     {
-      context: 'Validating successful all resources query',
+      context: 'User asks about a resource by name',
       messages: [
         {
           user: '{{user1}}',
-          content: {
-            text: 'Show all resources',
-            type: 'all',
-            action: 'QUERY_ETERNUM_RESOURCES', // アクションを追加
-            response: {
-              success: true,
-              data: [
-                { name: 'Wood', tier: 'common', rarity: 1.0 },
-                { name: 'Stone', tier: 'common', rarity: 1.27 },
-              ],
-            },
-          } as ResourceContent,
+          content: { text: 'Tell me about Dragonhide' },
         },
       ],
-      outcome: `{"isValid": true, "data": [{"name":"Wood","tier":"common"},{"name":"Stone","tier":"common"}]}`,
-    },
-    // 新しい例を追加
-    {
-      context: 'Validating resource details query',
-      messages: [
-        {
-          user: '{{user1}}',
-          content: {
-            text: 'Tell me about Dragonhide',
-            type: 'by_name',
-            name: 'Dragonhide',
-            action: 'QUERY_ETERNUM_RESOURCES',
-            response: {
-              success: true,
-              data: [
-                {
-                  name: 'Dragonhide',
-                  tier: 'mythic',
-                  rarity: 217.92,
-                  description: 'Dragons are the hidden guardians of our reality...',
-                },
-              ],
-            },
-          } as ResourceContent,
-        },
-      ],
-      outcome: `{"isValid": true, "data": [{"name":"Dragonhide","tier":"mythic","rarity":217.92}]}`,
+      outcome: "action=RESOURCE_QUERY, type=by_name, name='dragonhide'",
     },
   ],
 
+  // 1) validate
   validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
-    const content = message.content as ResourceContent;
-    console.log('Validating resource query:', content);
-    console.log('Action after validation:', content.action);
-
-    // テキスト内容からタイプとパラメータを推論
-    if (!content.type) {
-      const text = content.text.toLowerCase();
-      if (text.includes('about ')) {
-        content.type = 'by_name';
-        content.name = text.split('about ')[1].trim();
-        content.action = 'QUERY_ETERNUM_RESOURCES';
-      } else if (text.includes('all')) {
-        content.type = 'all';
-        content.action = 'QUERY_ETERNUM_RESOURCES';
-      }
-    }
-
-    // アクションの検証
-    if (!content.action) {
-      content.action = 'QUERY_ETERNUM_RESOURCES';
-    }
-
-    if (!content.text) return false;
-
-    // レスポンスは初期バリデーション時には存在しない可能性がある
-    if (content.response) {
-      if (typeof content.response.success !== 'boolean') return false;
-      if (!Array.isArray(content.response.data)) return false;
-
-      if (content.response.data.length > 0) {
-        const validFields = content.response.data.every(
-          (item) => typeof item.name === 'string' && typeof item.tier === 'string',
-        );
-        if (!validFields) return false;
-      }
-    }
-    console.log('Resource query validation successful');
-    console.log('Content:', content);
-    return true;
+    const text = (message.content.text || '').toLowerCase();
+    // 例: "about" や "show me all" "tier" などのキーワードで判定
+    if (!text) return false;
+    return text.includes('about') || text.includes('all') || text.includes('tier') || text.includes('rarity');
   },
 
+  // 2) handler
   handler: async (runtime: IAgentRuntime, message: Memory) => {
-    const content = message.content as ResourceContent;
-    console.log('[eval]Resource query initiated:', content);
-    // レスポンスがない場合は初期クエリとして扱う
-    if (!content.response) {
-      return {
-        isValid: true,
-        data: [],
-        message: 'Initial resource query validation successful',
-      };
-    }
+    // 例: 簡単に "about X" / "all" / "tier X" / "rarity X" を解析
+    const text = message.content.text.toLowerCase();
 
-    if (!content.response.success) {
-      return {
-        isValid: false,
-        error: content.response.message || 'Query failed for unknown reasons',
-      };
-    }
-
-    if (content.response.data.length === 0) {
-      return {
-        isValid: true,
-        data: [],
-        message: content.type === 'by_tier' ? `No resources found in ${content.tier} tier` : 'No resources found',
-      };
-    }
-
-    return {
-      isValid: true,
-      data: content.response.data.map((item) => ({
-        name: item.name,
-        tier: item.tier,
-        rarity: item.rarity,
-        description: item.description,
-      })),
-      message: 'Resource data validated successfully',
+    const params: ResourceQueryParams = {
+      text,
+      type: 'all',
     };
+
+    if (text.includes('about ')) {
+      params.type = 'by_name';
+      params.name = text.split('about ')[1]?.trim();
+    } else if (text.includes('all')) {
+      params.type = 'all';
+    } else if (text.includes('tier ')) {
+      params.type = 'by_tier';
+      params.tier = text.split('tier ')[1]?.trim();
+    } else if (text.includes('rarity ')) {
+      params.type = 'by_rarity';
+      const valStr = text.split('rarity ')[1]?.trim();
+      if (valStr) {
+        const val = parseFloat(valStr);
+        if (!isNaN(val)) params.rarity = val;
+      }
+    }
+
+    // Evaluator で set
+    message.content.action = 'RESOURCE_QUERY';
+    Object.assign(message.content, params);
+
+    console.log('[resourceQueryEvaluator] set action=RESOURCE_QUERY, params=', params);
   },
 
+  // optional
   alwaysRun: false,
 };

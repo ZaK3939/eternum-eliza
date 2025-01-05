@@ -14,8 +14,9 @@ import { getTokenForProvider, loadCharacters, parseArguments } from './config.ts
 import { DatabaseConnectionWrapper } from './common/db.ts';
 import { cleanup, createAgent } from './agent.ts';
 import { initializeClients, setupClientErrorHandlers } from './mangers.ts';
+import { EternumClient } from './eternum/client-direct/client.ts';
 
-async function startAgent(character: Character, directClient: DirectClient) {
+async function startAgent(character: Character, eternumClient: EternumClient) {
   let dbWrapper: DatabaseConnectionWrapper | null = null;
   let runtime: AgentRuntime | null = null;
   let clients: any[] = [];
@@ -43,7 +44,7 @@ async function startAgent(character: Character, directClient: DirectClient) {
     const initializedClients = await initializeClients(character, runtime);
     clients = Object.values(initializedClients);
     runtime.clients = initializedClients;
-    directClient.registerAgent(runtime);
+    eternumClient.registerAgent(runtime);
 
     setupClientErrorHandlers(clients, character);
 
@@ -56,7 +57,8 @@ async function startAgent(character: Character, directClient: DirectClient) {
 }
 
 const startAgents = async () => {
-  const directClient = new DirectClient();
+  // const directClient = new DirectClient();
+  const eternumClient = new EternumClient();
   const serverPort = parseInt(settings.SERVER_PORT || '3000');
   const args = parseArguments();
 
@@ -67,13 +69,13 @@ const startAgents = async () => {
 
   try {
     for (const character of characters) {
-      await startAgent(character, directClient as DirectClient);
+      await startAgent(character, eternumClient);
     }
   } catch (error) {
     elizaLogger.error('Error starting agents:', error);
   }
 
-  directClient.start(serverPort);
+  eternumClient.start(serverPort);
 };
 
 startAgents().catch((error) => {

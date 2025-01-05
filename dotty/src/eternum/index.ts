@@ -1,13 +1,13 @@
 import { Plugin } from '@elizaos/core';
-import { resourcesAction } from './actions/resourse.ts';
+import { resourceQueryAction } from './actions/resource.ts';
 import { resourceQueryEvaluator } from './evaluator/resource.ts';
-import resourceQueryProvider from './provider/resourse.ts';
+import resourceQueryProvider from './provider/resourceQueryProvider.ts';
 
 export const eternumPlugin: Plugin = {
   name: 'eternum',
   description: 'Eternum city building game database plugin',
   // actions: [buildingAction, resourcesAction],
-  actions: [resourcesAction],
+  actions: [resourceQueryAction],
   // evaluators: [buildingQueryEvaluator, resourceQueryEvaluator],
   evaluators: [resourceQueryEvaluator],
   providers: [resourceQueryProvider],

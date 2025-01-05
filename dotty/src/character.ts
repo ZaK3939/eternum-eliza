@@ -4,7 +4,7 @@ export const character: Character = {
   name: 'Dotty',
   clients: [],
   plugins: [],
-  modelProvider: ModelProviderName.OPENAI,
+  modelProvider: ModelProviderName.ANTHROPIC,
   settings: {
     secrets: {
       DATABASE_URL: process.env.POSTGRES_URL,
