@@ -1,4 +1,4 @@
-import { Character, ModelProviderName, defaultCharacter, Clients, Plugin } from '@eliza/core';
+import { Character, ModelProviderName, defaultCharacter, Clients, Plugin } from '@elizaos/core';
 
 export const character: Character = {
   name: 'Dotty',

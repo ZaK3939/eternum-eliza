@@ -2,3 +2,4 @@ packages:
   - 'packages/*'
   - 'client'
   - 'dotty'
+  - 'packages/eliza/packages/*'

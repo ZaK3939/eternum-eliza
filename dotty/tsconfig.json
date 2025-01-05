@@ -19,12 +19,19 @@
     "checkJs": false,
     "noEmitOnError": false,
     "moduleDetection": "force",
-    // "allowArbitraryExtensions": true
     "baseUrl": ".",
     "paths": {
-      "@eliza/*": ["../packages/eliza/packages/*/src/index.ts"]
+      "@elizaos/core": ["../packages/eliza/packages/core/src"],
+      "@elizaos/adapter-postgres": ["../packages/eliza/packages/adapter-postgres/src"],
+      "@elizaos/plugin-bootstrap": ["../packages/eliza/packages/plugin-bootstrap/src"],
+      "@elizaos/plugin-node": ["../packages/eliza/packages/plugin-node/src"],
+      "@elizaos/client-auto": ["../packages/eliza/packages/client-auto/src"],
+      "@elizaos/client-direct": ["../packages/eliza/packages/client-direct/src"],
+      "@elizaos/client-telegram": ["../packages/eliza/packages/client-telegram/src"],
+      "@elizaos/plugin-tee": ["../packages/eliza/packages/plugin-tee/src"],
+      "@elizaos/plugin-trustdb": ["../packages/eliza/packages/plugin-trustdb/src"]
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "../**/node_modules"]
 }

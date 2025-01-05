@@ -1,9 +1,6 @@
-import { PostgresDatabaseAdapter } from '@eliza/adapter-postgres';
-import { AutoClientInterface } from '@eliza/client-auto';
-import { DirectClientInterface } from '@eliza/client-direct';
-import { DiscordClientInterface } from '@eliza/client-discord';
-import { TelegramClientInterface } from '@eliza/client-telegram';
-import { TwitterClientInterface } from '@eliza/client-twitter';
+import { AutoClientInterface } from '@elizaos/client-auto';
+import { DirectClientInterface } from '@elizaos/client-direct';
+import { TelegramClientInterface } from '@elizaos/client-telegram';
 import {
   AgentRuntime,
   CacheManager,
@@ -21,13 +18,11 @@ import {
   settings,
   stringToUuid,
   validateCharacterConfig,
-} from '@eliza/core';
-import { DirectClient } from '@eliza/client-direct';
+} from '@elizaos/core';
+import { DirectClient } from '@elizaos/client-direct';
 import dotenv from 'dotenv';
-import { bootstrapPlugin } from '@eliza/plugin-bootstrap';
-import { createNodePlugin } from '@eliza/plugin-node';
-import { solanaPlugin } from '@eliza/plugin-solana';
-import Database from 'better-sqlite3';
+import { bootstrapPlugin } from '@elizaos/plugin-bootstrap';
+import { createNodePlugin } from '@elizaos/plugin-node';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -177,23 +172,9 @@ export async function initializeClients(character: Character, runtime: IAgentRun
     if (autoClient) clients.auto = autoClient;
   }
 
-  if (clientTypes.includes(Clients.DISCORD)) {
-    const discordClient = await DiscordClientInterface.start(runtime);
-    if (discordClient) clients.discord = discordClient;
-  }
-
   if (clientTypes.includes(Clients.TELEGRAM)) {
     const telegramClient = await TelegramClientInterface.start(runtime);
     if (telegramClient) clients.telegram = telegramClient;
-  }
-
-  if (clientTypes.includes(Clients.TWITTER)) {
-    const twitterClient = await TwitterClientInterface.start(runtime);
-
-    if (twitterClient) {
-      clients.twitter = twitterClient;
-      (twitterClient as any).enableSearch = !isFalsish(getSecret(character, 'TWITTER_SEARCH_ENABLE'));
-    }
   }
 
   elizaLogger.log('client keys', Object.keys(clients));
@@ -220,12 +201,7 @@ export function createAgent(character: Character, db: IDatabaseAdapter, cache: I
     token,
     modelProvider: character.modelProvider,
     character,
-    plugins: [
-      bootstrapPlugin,
-      nodePlugin,
-      eternumPlugin,
-      character.settings.secrets?.WALLET_PUBLIC_KEY ? solanaPlugin : null,
-    ].filter(Boolean),
+    plugins: [bootstrapPlugin, nodePlugin, eternumPlugin].filter(Boolean),
     providers: [],
     actions: [],
     services: [],
@@ -250,13 +226,8 @@ async function startAgent(character: Character, directClient: DirectClient) {
     character.id ??= stringToUuid(character.name);
 
     const token = getTokenForProvider(character.modelProvider, character);
-    const dataDir = path.join(__dirname, '../data');
 
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-
-    dbWrapper = new DatabaseConnectionWrapper(dataDir);
+    dbWrapper = new DatabaseConnectionWrapper();
     await dbWrapper.init();
     const db = dbWrapper.getAdapter();
 
@@ -299,8 +270,8 @@ async function startAgent(character: Character, directClient: DirectClient) {
       if (!dbWrapper?.isHealthy) {
         elizaLogger.error('Database connection is unhealthy');
         try {
-          await dbWrapper?.cleanup();
-          dbWrapper = new DatabaseConnectionWrapper(dataDir);
+          await dbWrapper?.reconnect();
+          dbWrapper = new DatabaseConnectionWrapper();
           await dbWrapper.init();
           const db = dbWrapper.getAdapter();
           runtime.databaseAdapter = db;

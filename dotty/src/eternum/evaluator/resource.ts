@@ -1,5 +1,5 @@
 // resources.evaluator.ts
-import { Evaluator, IAgentRuntime, Memory } from '@eliza/core';
+import { Evaluator, IAgentRuntime, Memory } from '@elizaos/core';
 import { ResourceContent } from '../../common/types.ts';
 
 export const resourceQueryEvaluator: Evaluator = {

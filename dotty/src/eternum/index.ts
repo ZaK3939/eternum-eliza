@@ -1,4 +1,4 @@
-import { Plugin } from '@eliza/core';
+import { Plugin } from '@elizaos/core';
 import { resourcesAction } from './actions/resourse.ts';
 import { resourceQueryEvaluator } from './evaluator/resource.ts';
 import resourceQueryProvider from './provider/resourse.ts';

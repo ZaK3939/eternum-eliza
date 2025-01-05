@@ -1,4 +1,4 @@
-import { Plugin, Action, Content, ActionExample, Handler, Validator } from '@eliza/core';
+import { Plugin, Action, Content, ActionExample, Handler, Validator } from '@elizaos/core';
 
 export interface SearchResult {
   title: string;

@@ -1,6 +1,6 @@
 // resourceQueryProvider.ts
-import { Provider, IAgentRuntime, Memory, State, IDatabaseAdapter } from '@eliza/core';
-import PostgresDatabaseAdapter from '@eliza/adapter-postgres';
+import { Provider, IAgentRuntime, Memory, State, IDatabaseAdapter } from '@elizaos/core';
+import PostgresDatabaseAdapter from '@elizaos/adapter-postgres';
 import { QueryResult } from 'pg';
 
 export interface ResourceQueryParams {

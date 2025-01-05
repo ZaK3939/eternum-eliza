@@ -8,10 +8,10 @@ import {
   composeContext,
   generateMessageResponse,
   ModelClass,
-} from '@eliza/core';
+} from '@elizaos/core';
 import { ResourceContent } from '../../common/types.ts';
 import resourceQueryProvider from '../provider/resourse.ts';
-import { messageHandlerTemplate } from '@eliza/client-direct';
+import { messageHandlerTemplate } from '@elizaos/client-direct';
 
 export const resourcesAction: Action = {
   name: 'QUERY_ETERNUM_RESOURCES',
