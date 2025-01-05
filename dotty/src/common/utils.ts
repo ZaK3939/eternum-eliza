@@ -70,3 +70,19 @@ export const createRateLimiter = (maxRequests: number, timeWindow: number) => {
     },
   };
 };
+
+export function isFalsish(input: any): boolean {
+  if (Number.isNaN(input)) {
+    return true;
+  }
+
+  const value = input == null ? '' : String(input);
+  const falsishValues = ['false', '0', 'no', 'n', 'off', 'null', 'undefined', ''];
+
+  return falsishValues.includes(value.trim().toLowerCase());
+}
+
+export const wait = (minTime: number = 1000, maxTime: number = 3000) => {
+  const waitTime = Math.floor(Math.random() * (maxTime - minTime + 1)) + minTime;
+  return new Promise((resolve) => setTimeout(resolve, waitTime));
+};
