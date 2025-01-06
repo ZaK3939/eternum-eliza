@@ -20,6 +20,9 @@ importers:
       typescript:
         specifier: 5.4.4
         version: 5.4.4
+      uuid:
+        specifier: 11.0.3
+        version: 11.0.3
       zod:
         specifier: ^3.24.1
         version: 3.24.1
