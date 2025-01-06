@@ -1,7 +1,7 @@
 import express, { Application } from 'express';
 import { elizaLogger } from '@elizaos/core';
 import { IAgentRuntime, AgentRuntime, Client } from '@elizaos/core';
-import { createApiRouter } from './api.ts';
+// import { createApiRouter } from './api.ts';
 import { createMessageHandler } from './message.ts';
 import { settings } from '@elizaos/core';
 
@@ -25,8 +25,8 @@ export class EternumClient {
 
   private setupRoutes() {
     // API routes setup
-    const apiRouter = createApiRouter(this.agents, this);
-    this.app.use('/api', apiRouter);
+    // const apiRouter = createApiRouter(this.agents, this);
+    // this.app.use('/api', apiRouter);
 
     // Message handling routes
     const messageRouter = createMessageHandler(this.agents);
