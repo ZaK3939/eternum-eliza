@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "pnpm --dir ./client dev",
     "build-packages": "pnpm --dir packages/eternum build",
-    "build:dotty-deps": "NODE_OPTIONS='--max-old-space-size=8192' pnpm --filter \"@elizaos/core\" --filter \"@elizaos/adapter-postgres\" --filter \"@elizaos/client-auto\" --filter \"@elizaos/client-direct\" --filter \"@elizaos/client-telegram\" --filter \"@elizaos/plugin-bootstrap\" --filter \"@elizaos/plugin-node\" build",
+    "build:dotty-deps": "NODE_OPTIONS='--max-old-space-size=8192' pnpm --filter \"@elizaos/core\" --filter \"@elizaos/adapter-postgres\" --filter \"@elizaos/client-auto\" --filter \"@elizaos/client-telegram\" --filter \"@elizaos/plugin-bootstrap\" --filter \"@elizaos/plugin-node\" build",
     "start:dotty": "pnpm build:dotty-deps && pnpm --filter dotty start"
   },
   "pnpm": {

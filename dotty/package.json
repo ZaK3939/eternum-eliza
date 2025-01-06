@@ -10,7 +10,6 @@
   "dependencies": {
     "@elizaos/adapter-postgres": "workspace:^",
     "@elizaos/client-auto": "workspace:^",
-    "@elizaos/client-direct": "workspace:^",
     "@elizaos/client-discord": "workspace:^",
     "@elizaos/client-telegram": "workspace:^",
     "@elizaos/core": "workspace:^",
