@@ -10,7 +10,8 @@
   },
   "pnpm": {
     "overrides": {
-      "onnxruntime-node": "^1.20.0"
+      "onnxruntime-node": "^1.20.0",
+      "zod": "3.24.1"
     }
   },
   "dependencies": {
