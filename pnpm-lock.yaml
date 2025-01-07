@@ -15,8 +15,11 @@ importers:
       '@huggingface/transformers':
         specifier: 3.0.2
         version: 3.0.2
+      agentkeepalive:
+        specifier: ^4.6.0
+        version: 4.6.0
       onnxruntime-node:
-        specifier: 1.20.1
+        specifier: ^1.20.0
         version: 1.20.1
       openai:
         specifier: 4.73.0
