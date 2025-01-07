@@ -1,6 +1,6 @@
-import { ID, StructureType } from '../../sdk/packages/eternum/src';
 import * as THREE from 'three';
 import { Position } from './Position';
+import { ID, StructureType } from '@bibliothecadao/eternum';
 export type HexPosition = { col: number; row: number };
 
 export enum SceneName {

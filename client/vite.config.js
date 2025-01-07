@@ -63,12 +63,13 @@ export default defineConfig({
     },
   },
   build: {
+    sourcemap: true,
     target: 'esnext',
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        map: resolve(__dirname, 'map/index.html'),
-        hex: resolve(__dirname, 'hex/index.html'),
+        // map: resolve(__dirname, 'map/index.html'),
+        // hex: resolve(__dirname, 'hex/index.html'),
       },
       maxParallelFileOps: 2,
       cache: false,
@@ -78,7 +79,7 @@ export default defineConfig({
           react: 'React',
           'react-dom': 'ReactDOM',
         },
-        sourcemap: true,
+        // sourcemap: true,
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
             return 'vendor';
