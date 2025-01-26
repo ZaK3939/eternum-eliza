@@ -1,0 +1,1 @@
+export const SEARCH_KNOWLEDGE_NAME = "search-knowledge";

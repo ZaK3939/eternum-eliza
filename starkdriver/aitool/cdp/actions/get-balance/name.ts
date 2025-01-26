@@ -1,0 +1,1 @@
+export const GET_BALANCE_NAME = 'get_balance'; 

@@ -1,0 +1,1 @@
+export const GET_WALLET_DETAILS_NAME = 'get_wallet_details'; 

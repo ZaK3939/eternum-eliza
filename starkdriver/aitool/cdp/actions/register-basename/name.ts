@@ -1,0 +1,1 @@
+export const REGISTER_BASENAME_NAME = "register_basename"; 
